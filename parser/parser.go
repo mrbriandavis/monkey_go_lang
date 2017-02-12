@@ -9,11 +9,19 @@ import (
 
 type Parser struct {
 	l *lexer.Lexer
+	errors []string
 
 	curToken token.Token
 	peekToken token.Token
-	errors []string
+	
+	prefixParseFn map[token.TokenType]prefixParseFn
+	infixParseFn map[token.TokenType]infixParseFn
 }
+
+type (
+	prefixParseFn func() ast.Expression 
+	infixParseFn func(ast.Expression) ast.Expression
+)
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
@@ -25,6 +33,14 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 
 	return p
+}
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFn[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFn[TokenType] = fn
 }
 
 func (p *Parser) Errors() []string {
